@@ -288,8 +288,6 @@ h2 { margin-top: 0; }
   font-weight: 700;
 }
 
-.timer.low { color: var(--bad); }
-
 .footer-note {
   text-align: center;
   color: var(--muted);

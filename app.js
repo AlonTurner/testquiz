@@ -11,11 +11,11 @@ const TOPIC_LABELS = {
 };
 
 const EXAM_SIZE = 25;
-const EXAM_SECONDS = 30 * 60;
 
 const LS = {
   bestScore: "ms_best_score",
   bestCount: "ms_best_count",
+  bestTime: "ms_best_time",
   wrongIds: "ms_wrong_ids"
 };
 
@@ -60,7 +60,7 @@ const state = {
   questions: [],
   index: 0,
   answers: [],
-  timerLeft: EXAM_SECONDS,
+  elapsedSeconds: 0,
   timerHandle: null
 };
 
@@ -87,6 +87,7 @@ function renderHome() {
   const wrongCount = getWrongIds().size;
   const bestScore = localStorage.getItem(LS.bestScore);
   const bestCount = localStorage.getItem(LS.bestCount);
+  const bestTime = localStorage.getItem(LS.bestTime);
 
   const topicsHtml = Object.entries(TOPIC_LABELS).map(([key, label]) => {
     const active = state.selectedTopics.has(key);
@@ -104,7 +105,7 @@ function renderHome() {
       </div>
       <div class="stat-row">
         <div class="stat"><div class="num">${availableCount}</div><div class="label">שאלות זמינות</div></div>
-        <div class="stat"><div class="num">${bestScore ? bestScore + "%" : "—"}</div><div class="label">שיא במבחן מדומה</div></div>
+        <div class="stat"><div class="num">${bestScore ? bestScore + "%" : "—"}</div><div class="label">שיא במבחן מדומה${bestTime ? " (" + bestTime + ")" : ""}</div></div>
         <div class="stat"><div class="num">${wrongCount}</div><div class="label">שאלות לחזרה</div></div>
       </div>
     </div>
@@ -120,7 +121,7 @@ function renderHome() {
         <button class="mode-btn" id="examBtn">
           <span class="emoji">⏱️</span>
           <span class="title">מבחן מדומה</span>
-          <span class="desc">25 שאלות אקראיות, ${EXAM_SECONDS/60} דק', ציון בסוף</span>
+          <span class="desc">25 שאלות אקראיות, שעון עצר בלי הגבלה, ציון בסוף</span>
         </button>
       </div>
       ${wrongCount > 0 ? `<button class="btn secondary" id="reviewWrongBtn">🔁 תרגול על ${wrongCount} השאלות שטעיתי בהן</button>` : ""}
@@ -153,7 +154,7 @@ function startQuiz(mode) {
   state.mode = mode;
   if (mode === "exam") {
     state.questions = shuffle(pool).slice(0, Math.min(EXAM_SIZE, pool.length)).map(shuffleChoicesOf);
-    state.timerLeft = EXAM_SECONDS;
+    state.elapsedSeconds = 0;
   } else {
     state.questions = shuffle(pool).map(shuffleChoicesOf);
   }
@@ -179,16 +180,9 @@ function startWrongReview() {
 function startTimer() {
   stopTimer();
   state.timerHandle = setInterval(() => {
-    state.timerLeft--;
+    state.elapsedSeconds++;
     const timerEl = document.getElementById("timerDisplay");
-    if (timerEl) {
-      timerEl.textContent = formatTime(state.timerLeft);
-      timerEl.classList.toggle("low", state.timerLeft <= 60);
-    }
-    if (state.timerLeft <= 0) {
-      stopTimer();
-      finishQuiz();
-    }
+    if (timerEl) timerEl.textContent = formatTime(state.elapsedSeconds);
   }, 1000);
 }
 
@@ -205,7 +199,7 @@ function renderQuiz() {
   const pct = Math.round((state.index / total) * 100);
 
   const timerHtml = state.mode === "exam"
-    ? `<span class="timer" id="timerDisplay">${formatTime(state.timerLeft)}</span>`
+    ? `⏱️ <span class="timer" id="timerDisplay">${formatTime(state.elapsedSeconds)}</span>`
     : "";
 
   const choicesHtml = q.choices.map((c, i) =>
@@ -270,13 +264,16 @@ function finishQuiz() {
   stopTimer();
   updateWrongIds(state.answers);
 
+  state.finalTime = state.elapsedSeconds;
+
   if (state.mode === "exam") {
     const correct = state.answers.filter(a => a.chosenIndex === a.correctIndex).length;
     const pct = Math.round((correct / state.answers.length) * 100);
     const prevBest = parseInt(localStorage.getItem(LS.bestScore) || "0", 10);
-    if (pct > prevBest) {
+    if (pct >= prevBest) {
       localStorage.setItem(LS.bestScore, pct);
       localStorage.setItem(LS.bestCount, `${correct}/${state.answers.length}`);
+      localStorage.setItem(LS.bestTime, formatTime(state.finalTime));
     }
   }
 
@@ -313,7 +310,7 @@ function renderResult() {
     <div class="card">
       <div class="result-emoji">${emoji}</div>
       <div class="result-score">${correct}/${total}</div>
-      <div class="result-sub">${pct}% הצלחה ${state.mode === "exam" ? "· מבחן מדומה" : "· תרגול חופשי"}</div>
+      <div class="result-sub">${pct}% הצלחה ${state.mode === "exam" ? `· מבחן מדומה · זמן: ${formatTime(state.finalTime || 0)}` : "· תרגול חופשי"}</div>
       <div class="btn-row">
         <button class="btn" id="retryBtn">🔁 שוב</button>
         <button class="btn secondary" id="homeBtn2">🏠 בית</button>
