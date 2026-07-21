@@ -44,6 +44,15 @@ function shuffle(arr) {
   return a;
 }
 
+function shuffleChoicesOf(q) {
+  const order = shuffle(q.choices.map((_, i) => i));
+  return {
+    ...q,
+    choices: order.map(i => q.choices[i]),
+    correct: order.indexOf(q.correct)
+  };
+}
+
 const state = {
   screen: "home",
   selectedTopics: new Set(Object.keys(TOPIC_LABELS)),
@@ -143,10 +152,10 @@ function startQuiz(mode) {
   if (pool.length === 0) return;
   state.mode = mode;
   if (mode === "exam") {
-    state.questions = shuffle(pool).slice(0, Math.min(EXAM_SIZE, pool.length));
+    state.questions = shuffle(pool).slice(0, Math.min(EXAM_SIZE, pool.length)).map(shuffleChoicesOf);
     state.timerLeft = EXAM_SECONDS;
   } else {
-    state.questions = shuffle(pool);
+    state.questions = shuffle(pool).map(shuffleChoicesOf);
   }
   state.index = 0;
   state.answers = [];
@@ -160,7 +169,7 @@ function startWrongReview() {
   const pool = QUESTIONS.filter(q => ids.has(q.id));
   if (pool.length === 0) return;
   state.mode = "practice";
-  state.questions = shuffle(pool);
+  state.questions = shuffle(pool).map(shuffleChoicesOf);
   state.index = 0;
   state.answers = [];
   state.screen = "quiz";
