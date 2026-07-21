@@ -1,6 +1,25 @@
 // תרגול הנדסת שיטות - לוגיקת האפליקציה
 QUESTIONS.forEach((q, i) => { q.id = i; });
 
+// ---------- Theme toggle ----------
+const THEME_KEY = "ms_theme";
+function currentTheme() {
+  const saved = document.documentElement.getAttribute("data-theme");
+  if (saved) return saved;
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+function applyThemeIcon() {
+  const t = currentTheme();
+  document.getElementById("themeToggle").textContent = t === "dark" ? "☀️" : "🌙";
+}
+document.getElementById("themeToggle").addEventListener("click", () => {
+  const next = currentTheme() === "dark" ? "light" : "dark";
+  document.documentElement.setAttribute("data-theme", next);
+  localStorage.setItem(THEME_KEY, next);
+  applyThemeIcon();
+});
+applyThemeIcon();
+
 const TOPIC_LABELS = {
   ai: "AI וסוכנים",
   worksample: "דגימת עבודה",

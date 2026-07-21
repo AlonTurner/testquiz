@@ -24,6 +24,38 @@
   }
 }
 
+:root[data-theme="dark"] {
+  --bg: #0f1420;
+  --card: #1a2233;
+  --card-2: #212b40;
+  --text: #eef1f8;
+  --muted: #96a2ba;
+  --accent: #6c8dff;
+  --shadow: 0 8px 24px rgba(0,0,0,.35);
+}
+
+:root[data-theme="light"] {
+  --bg: #f3f5fb;
+  --card: #ffffff;
+  --card-2: #eef1fa;
+  --text: #1b2233;
+  --muted: #5c6579;
+  --accent: #3f5fe0;
+  --shadow: 0 8px 24px rgba(30,40,80,.12);
+}
+
+.theme-toggle {
+  background: var(--card-2);
+  border: none;
+  color: var(--text);
+  border-radius: 999px;
+  width: 36px;
+  height: 36px;
+  font-size: 1.05rem;
+  cursor: pointer;
+  margin-inline-start: 8px;
+}
+
 * { box-sizing: border-box; }
 
 html, body {
