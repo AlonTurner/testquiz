@@ -70,6 +70,7 @@ function render() {
   if (state.screen === "home") renderHome();
   else if (state.screen === "quiz") renderQuiz();
   else if (state.screen === "result") renderResult();
+  else if (state.screen === "summaries") renderSummaries();
 }
 
 document.getElementById("homeBtn").addEventListener("click", () => {
@@ -111,6 +112,12 @@ function renderHome() {
     </div>
 
     <div class="card">
+      <h2>📚 סיכומי נושאים</h2>
+      <div class="result-sub" style="text-align:right;margin-bottom:10px;">תמצית הנוסחאות והרעיונות המרכזיים לכל נושא - כדאי לעבור עליה לפני שמתחילים לתרגל.</div>
+      <button class="btn secondary" id="summariesBtn">📖 פתחו את הסיכומים</button>
+    </div>
+
+    <div class="card">
       <h2>בחרו מצב</h2>
       <div class="mode-grid">
         <button class="mode-btn" id="practiceBtn">
@@ -144,6 +151,7 @@ function renderHome() {
 
   document.getElementById("practiceBtn").addEventListener("click", () => startQuiz("practice"));
   document.getElementById("examBtn").addEventListener("click", () => startQuiz("exam"));
+  document.getElementById("summariesBtn").addEventListener("click", () => { state.screen = "summaries"; render(); });
   const reviewBtn = document.getElementById("reviewWrongBtn");
   if (reviewBtn) reviewBtn.addEventListener("click", startWrongReview);
 }
@@ -324,6 +332,44 @@ function renderResult() {
 
   document.getElementById("retryBtn").addEventListener("click", () => startQuiz(state.mode));
   document.getElementById("homeBtn2").addEventListener("click", () => { state.screen = "home"; render(); });
+}
+
+// ---------- Summaries screen ----------
+function renderSummaries() {
+  const cardsHtml = Object.entries(TOPIC_LABELS).map(([key, label]) => {
+    const summary = SUMMARIES[key];
+    const pointsHtml = summary.points.map(p => `<li>${p}</li>`).join("");
+    return `
+      <div class="card summary-card" data-topic="${key}">
+        <button class="summary-toggle" data-topic="${key}">
+          <span>📌 ${label}</span>
+          <span class="summary-arrow">▾</span>
+        </button>
+        <ul class="summary-points hidden">${pointsHtml}</ul>
+      </div>
+    `;
+  }).join("");
+
+  screenEl.innerHTML = `
+    <div class="card">
+      <h2>📚 סיכומי נושאים</h2>
+      <div class="result-sub" style="text-align:right;">לחצו על נושא כדי לפתוח/לסגור את הסיכום שלו.</div>
+    </div>
+    ${cardsHtml}
+    <button class="btn secondary" id="backFromSummaries">🏠 חזרה לבית</button>
+  `;
+
+  document.querySelectorAll(".summary-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const card = btn.closest(".summary-card");
+      const list = card.querySelector(".summary-points");
+      const arrow = card.querySelector(".summary-arrow");
+      const isHidden = list.classList.contains("hidden");
+      list.classList.toggle("hidden");
+      arrow.textContent = isHidden ? "▴" : "▾";
+    });
+  });
+  document.getElementById("backFromSummaries").addEventListener("click", () => { state.screen = "home"; render(); });
 }
 
 render();

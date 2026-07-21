@@ -297,6 +297,49 @@ h2 { margin-top: 0; }
 
 .hidden { display: none !important; }
 
+.summary-card { padding: 0; overflow: hidden; }
+
+.summary-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  padding: 18px 20px;
+  text-align: right;
+}
+
+.summary-arrow { color: var(--muted); font-size: 1.1rem; }
+
+.summary-points {
+  list-style: none;
+  margin: 0;
+  padding: 0 20px 18px;
+}
+
+.summary-points li {
+  position: relative;
+  padding-right: 18px;
+  margin-bottom: 10px;
+  font-size: .88rem;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.summary-points li::before {
+  content: "•";
+  position: absolute;
+  right: 0;
+  color: var(--accent);
+  font-weight: 800;
+}
+
 .link-btn {
   background: none;
   border: none;
