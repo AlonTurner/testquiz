@@ -391,6 +391,40 @@ h2 { margin-top: 0; }
   font-weight: 800;
 }
 
+.formula-list {
+  padding: 0 20px 18px;
+}
+
+.formula-item {
+  border-top: 1px dashed var(--card-2);
+  padding: 12px 0;
+}
+
+.formula-item:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.formula-eq {
+  font-family: "Cascadia Code", "Consolas", "SFMono-Regular", Menlo, monospace;
+  font-variant-numeric: tabular-nums;
+  unicode-bidi: plaintext;
+  text-align: center;
+  background: var(--card-2);
+  border-radius: 8px;
+  padding: 9px 12px;
+  font-size: .92rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.formula-desc {
+  margin-top: 6px;
+  font-size: .82rem;
+  line-height: 1.5;
+  color: var(--muted);
+}
+
 .link-btn {
   background: none;
   border: none;

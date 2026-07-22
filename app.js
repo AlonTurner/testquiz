@@ -133,6 +133,7 @@ function render() {
   else if (state.screen === "quiz") renderQuiz();
   else if (state.screen === "result") renderResult();
   else if (state.screen === "summaries") renderSummaries();
+  else if (state.screen === "formulas") renderFormulas();
 }
 
 document.getElementById("homeBtn").addEventListener("click", () => {
@@ -180,6 +181,12 @@ function renderHome() {
     </div>
 
     <div class="card">
+      <h2>🧮 דף נוסחאות מרוכז</h2>
+      <div class="result-sub" style="text-align:right;margin-bottom:10px;">כל הנוסחאות הנדרשות לחישובים, מרוכזות לפי נושא - שימושי כבסיס לדף הנוסחאות האישי שמותר להביא למבחן.</div>
+      <button class="btn secondary" id="formulasBtn">📐 פתחו את דף הנוסחאות</button>
+    </div>
+
+    <div class="card">
       <h2>בחרו מצב</h2>
       <div class="mode-grid">
         <button class="mode-btn" id="practiceBtn">
@@ -214,6 +221,7 @@ function renderHome() {
   document.getElementById("practiceBtn").addEventListener("click", () => startQuiz("practice"));
   document.getElementById("examBtn").addEventListener("click", () => startQuiz("exam"));
   document.getElementById("summariesBtn").addEventListener("click", () => { state.screen = "summaries"; render(); });
+  document.getElementById("formulasBtn").addEventListener("click", () => { state.screen = "formulas"; render(); });
   const reviewBtn = document.getElementById("reviewWrongBtn");
   if (reviewBtn) reviewBtn.addEventListener("click", startWrongReview);
 }
@@ -446,6 +454,49 @@ function renderSummaries() {
     });
   });
   document.getElementById("backFromSummaries").addEventListener("click", () => { state.screen = "home"; render(); });
+}
+
+// ---------- Formula sheet screen ----------
+function renderFormulas() {
+  const cardsHtml = Object.entries(FORMULAS).map(([key, items]) => {
+    const label = TOPIC_LABELS[key] || key;
+    const itemsHtml = items.map(item => `
+      <div class="formula-item">
+        <div class="formula-eq">${item.f}</div>
+        ${item.d ? `<div class="formula-desc">${item.d}</div>` : ""}
+      </div>
+    `).join("");
+    return `
+      <div class="card formula-card" data-topic="${key}">
+        <button class="summary-toggle" data-topic="${key}">
+          <span>📐 ${label}</span>
+          <span class="summary-arrow">▾</span>
+        </button>
+        <div class="formula-list hidden">${itemsHtml}</div>
+      </div>
+    `;
+  }).join("");
+
+  screenEl.innerHTML = `
+    <div class="card">
+      <h2>🧮 דף נוסחאות מרוכז</h2>
+      <div class="result-sub" style="text-align:right;">לחצו על נושא כדי לפתוח/לסגור. נושא "AI וסוכנים" מושג, ולכן אינו כולל נוסחאות חישוביות.</div>
+    </div>
+    ${cardsHtml}
+    <button class="btn secondary" id="backFromFormulas">🏠 חזרה לבית</button>
+  `;
+
+  document.querySelectorAll(".formula-card .summary-toggle").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const card = btn.closest(".formula-card");
+      const list = card.querySelector(".formula-list");
+      const arrow = card.querySelector(".summary-arrow");
+      const isHidden = list.classList.contains("hidden");
+      list.classList.toggle("hidden");
+      arrow.textContent = isHidden ? "▴" : "▾";
+    });
+  });
+  document.getElementById("backFromFormulas").addEventListener("click", () => { state.screen = "home"; render(); });
 }
 
 render();
