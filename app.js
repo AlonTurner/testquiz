@@ -63,6 +63,49 @@ function shuffle(arr) {
   return a;
 }
 
+// Groups questions that share a "story" (scenario) into one ordered cluster,
+// so shuffling keeps them together and in their original part order - a
+// standalone question (no story) is just a group of one.
+function groupIntoStoryClusters(pool) {
+  const groups = [];
+  const seenStories = new Map();
+  pool.forEach(q => {
+    if (!q.story) {
+      groups.push([q]);
+      return;
+    }
+    if (seenStories.has(q.story)) {
+      seenStories.get(q.story).push(q);
+    } else {
+      const group = [q];
+      seenStories.set(q.story, group);
+      groups.push(group);
+    }
+  });
+  groups.forEach(g => g.sort((a, b) => (a.part || 0) - (b.part || 0)));
+  return groups;
+}
+
+// Shuffles whole story-clusters (never splitting a story across positions),
+// then flattens back into a single ordered list of questions.
+function shuffleKeepingStoriesTogether(pool) {
+  return shuffle(groupIntoStoryClusters(pool)).flat();
+}
+
+// Picks whole story-clusters until at least `size` questions are collected
+// (never cuts a story short - may slightly exceed `size`).
+function pickGroupsUpTo(pool, size) {
+  const groups = shuffle(groupIntoStoryClusters(pool));
+  const picked = [];
+  let count = 0;
+  for (const g of groups) {
+    if (count >= size) break;
+    picked.push(...g);
+    count += g.length;
+  }
+  return picked;
+}
+
 function shuffleChoicesOf(q) {
   const order = shuffle(q.choices.map((_, i) => i));
   return {
@@ -180,10 +223,10 @@ function startQuiz(mode) {
   if (pool.length === 0) return;
   state.mode = mode;
   if (mode === "exam") {
-    state.questions = shuffle(pool).slice(0, Math.min(EXAM_SIZE, pool.length)).map(shuffleChoicesOf);
+    state.questions = pickGroupsUpTo(pool, EXAM_SIZE).map(shuffleChoicesOf);
     state.elapsedSeconds = 0;
   } else {
-    state.questions = shuffle(pool).map(shuffleChoicesOf);
+    state.questions = shuffleKeepingStoriesTogether(pool).map(shuffleChoicesOf);
   }
   state.index = 0;
   state.answers = [];
@@ -197,7 +240,7 @@ function startWrongReview() {
   const pool = QUESTIONS.filter(q => ids.has(q.id));
   if (pool.length === 0) return;
   state.mode = "practice";
-  state.questions = shuffle(pool).map(shuffleChoicesOf);
+  state.questions = shuffleKeepingStoriesTogether(pool).map(shuffleChoicesOf);
   state.index = 0;
   state.answers = [];
   state.screen = "quiz";
@@ -233,12 +276,21 @@ function renderQuiz() {
     `<button class="choice" data-i="${i}">${String.fromCharCode(1488 + i)}. ${c}</button>`
   ).join("");
 
+  const story = q.story ? STORIES[q.story] : null;
+  const storyHtml = story ? `
+    <div class="card story-card">
+      <div class="story-label">📖 ${story.title} · סעיף ${q.part} מתוך ${q.of}</div>
+      <div class="story-text">${story.text}</div>
+    </div>
+  ` : "";
+
   screenEl.innerHTML = `
     <div class="progress-wrap"><div class="progress-bar" style="width:${pct}%"></div></div>
     <div class="q-meta">
       <span>שאלה ${state.index + 1} מתוך ${total}</span>
       ${timerHtml}
     </div>
+    ${storyHtml}
     <div class="card">
       <div class="q-text">${q.q}</div>
       <div id="choicesWrap">${choicesHtml}</div>
@@ -324,14 +376,19 @@ function renderResult() {
 
   const reviewHtml = wrongAnswers.length === 0
     ? `<p style="text-align:center;color:var(--good);font-weight:700;">כל הכבוד, ענית נכון על הכול! 🎉</p>`
-    : wrongAnswers.map(a => `
+    : wrongAnswers.map(a => {
+        const story = a.q.story ? STORIES[a.q.story] : null;
+        const storyLine = story ? `<div class="story-label" style="margin-bottom:6px;">📖 ${story.title} · סעיף ${a.q.part} מתוך ${a.q.of}: <span style="font-weight:400;color:var(--muted);">${story.text}</span></div>` : "";
+        return `
         <div class="review-item">
+          ${storyLine}
           <div class="q">${a.q.q}</div>
           <div class="your">התשובה שלך: ${String.fromCharCode(1488 + a.chosenIndex)}. ${a.q.choices[a.chosenIndex]}</div>
           <div class="right">התשובה הנכונה: ${String.fromCharCode(1488 + a.correctIndex)}. ${a.q.choices[a.correctIndex]}</div>
           <div style="margin-top:6px;color:var(--muted);">${a.q.explain}</div>
         </div>
-      `).join("");
+      `;
+      }).join("");
 
   screenEl.innerHTML = `
     <div class="card">

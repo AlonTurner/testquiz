@@ -209,6 +209,25 @@ h2 { margin-top: 0; }
   margin-bottom: 18px;
 }
 
+.story-card {
+  background: var(--card-2);
+  border: 1px dashed var(--accent);
+  padding: 14px 16px;
+}
+
+.story-label {
+  font-weight: 700;
+  color: var(--accent);
+  font-size: .82rem;
+  margin-bottom: 6px;
+}
+
+.story-text {
+  font-size: .9rem;
+  line-height: 1.55;
+  color: var(--text);
+}
+
 .choice {
   display: block;
   width: 100%;
